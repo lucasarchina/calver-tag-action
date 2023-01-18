@@ -85,7 +85,7 @@ async function getNextVersionTag(prefix, prerelease) {
 function getNextDateVersion(previousVersionTags) {
   const { year, month, day } = getDateParts();
   const newVersionParts = [`${year}`, `${month}`, `${day}`, 0];
-
+  console.log(`This is previousVersionTags ${previousVersionTags}`);
   while (_tagExists(newVersionParts, previousVersionTags)) {
     newVersionParts[3]++;
   }
