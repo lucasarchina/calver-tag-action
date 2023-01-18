@@ -10210,6 +10210,8 @@ function _tagExists(tagParts, previousVersionTags, prereleaseParts) {
 }
 
 function processVersion(version) {
+  version = version.split("_")[0];
+
   if (!semver.valid(version)) {
     return false;
   }
