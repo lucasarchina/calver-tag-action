@@ -10087,7 +10087,7 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 // Heavily based on https://github.com/mydea/action-tag-date-version with some changes to the date and added prefix
-const { setFailed, getInput, setOutput } = __nccwpck_require__(3494);
+const { setFailed, getInput } = __nccwpck_require__(3494);
 const { context } = __nccwpck_require__(4464);
 const { exec } = __nccwpck_require__(5420);
 const semver = __nccwpck_require__(6585);
@@ -10098,15 +10098,19 @@ async function run() {
     const prefix = getInput("prefix");
     const outputOnly = getInput("output-only", { required: false }) === "true";
 
-    const currentVersionTag = await getCurrentTag();
+    // const currentVersionTag = await getCurrentTag();
 
-    if (currentVersionTag) {
-      console.log(`Already at version ${currentVersionTag}, skipping...`);
-      setOutput("version", currentVersionTag);
-      return;
-    }
+    // if (currentVersionTag) {
+    //   console.log(`Already at version ${currentVersionTag}, skipping...`);
+    //   `version=${currentVersionTag}` >> $GITHUB_OUTPUT;
+    //   return;
+    // }
 
-    const nextVersion = await getNextVersionTag(prefix, prerelease);
+    let nextVersion = await getNextVersionTag(prefix, prerelease);
+
+    //Update to format yyyy.mm.dd_micro
+    let nextVersionArray = nextVersion.split(".");
+    nextVersion = `${nextVersionArray[0]}.${nextVersionArray[1]}.${nextVersionArray[2]}_${nextVersionArray[3]}`;
 
     console.log(`Next version: ${nextVersion}`);
 
@@ -10137,8 +10141,7 @@ async function run() {
         `Only outputting version because output-only is set to ${outputOnly}`
       );
     }
-
-    setOutput("version", nextVersion);
+    `version=${nextVersion}` >> $GITHUB_OUTPUT;
   } catch (error) {
     setFailed(error.message);
   }
@@ -10172,23 +10175,17 @@ async function getNextVersionTag(prefix, prerelease) {
 
 function getNextDateVersion(previousVersionTags) {
   const { year, month, day } = getDateParts();
-  const newVersionParts = [
-    `${year}`,
-    `${month}`,
-    `${day}`,
-    previousVersionTags.split("_")[1],
-  ];
-  console.log(`This is previousVersionTags ${previousVersionTags}`);
-  if (_tagExists(newVersionParts, previousVersionTags)) {
+  const newVersionParts = [`${year}`, `${month}`, `${day}`, 0];
+  while (_tagExists(newVersionParts, previousVersionTags)) {
     newVersionParts[3]++;
   }
 
-  return joinParts(newVersionParts);
+  return newVersionParts.join(".");
 }
 
 function getPrereleaseVersion(previousVersionTags, prerelease) {
   const nextVersion = getNextDateVersion(previousVersionTags);
-  const nextVersionParts = splitParts(nextVersion);
+  const nextVersionParts = nextVersion.split(".");
 
   let prereleaseVersion = 0;
   while (
@@ -10204,8 +10201,8 @@ function getPrereleaseVersion(previousVersionTags, prerelease) {
 }
 
 function _tagExists(tagParts, previousVersionTags, prereleaseParts) {
-  let newTag = joinParts(tagParts);
-  newTag = newTag.split("_")[0];
+  let newTag = tagParts.join(".");
+
   if (prereleaseParts) {
     const [prerelease, prereleaseVersion] = prereleaseParts;
     newTag = `${newTag}-${prerelease}.${prereleaseVersion}`;
@@ -10215,21 +10212,24 @@ function _tagExists(tagParts, previousVersionTags, prereleaseParts) {
 }
 
 function processVersion(version) {
-  version = version.split("_")[0];
-
+  versionSplitted = version.replace("_", ".").split(".");
+  version = `${versionSplitted[0]}.${versionSplitted[1]}.${versionSplitted[2]}`;
   if (!semver.valid(version)) {
     return false;
   }
 
-  const { major, minor, version: parsedVersion } = semver.parse(version);
+  const { major, minor, patch, version: parsedVersion } = semver.parse(version);
 
-  const { year: currentYear, month: currentMonth } = getDateParts();
+  const {
+    year: currentYear,
+    month: currentMonth,
+    day: currentDay,
+  } = getDateParts();
 
-  if (major !== currentYear || minor !== currentMonth) {
+  if (major !== currentYear || minor !== currentMonth || patch !== currentDay) {
     return false;
   }
-
-  return parsedVersion;
+  return `${parsedVersion}.${versionSplitted[3]}`;
 }
 
 function getDateParts() {
@@ -10239,24 +10239,6 @@ function getDateParts() {
   const day = date.getDate();
 
   return { year, month, day };
-}
-
-function joinParts(parts) {
-  return `${parts[0]}.${parts[1]}.${parts[2]}_${parts[3]}`;
-}
-
-function splitParts(version) {
-  let verRet = [];
-
-  verRet = version.split(".");
-
-  const day = verRet[2].split("_")[0];
-  const micro = verRet[2].split("_")[1];
-
-  verRet[2] = day;
-  verRet[3] = micro;
-
-  return verRet;
 }
 
 async function execGetOutput(command) {
