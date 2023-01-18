@@ -10087,7 +10087,7 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 // Heavily based on https://github.com/mydea/action-tag-date-version with some changes to the date and added prefix
-const { setFailed, getInput } = __nccwpck_require__(3494);
+const { setFailed, getInput, setOutput } = __nccwpck_require__(3494);
 const { context } = __nccwpck_require__(4464);
 const { exec } = __nccwpck_require__(5420);
 const semver = __nccwpck_require__(6585);
@@ -10098,13 +10098,13 @@ async function run() {
     const prefix = getInput("prefix");
     const outputOnly = getInput("output-only", { required: false }) === "true";
 
-    // const currentVersionTag = await getCurrentTag();
+    const currentVersionTag = await getCurrentTag();
 
-    // if (currentVersionTag) {
-    //   console.log(`Already at version ${currentVersionTag}, skipping...`);
-    //   `version=${currentVersionTag}` >> $GITHUB_OUTPUT;
-    //   return;
-    // }
+    if (currentVersionTag) {
+      console.log(`Already at version ${currentVersionTag}, skipping...`);
+      setOutput("version", currentVersionTag);
+      return;
+    }
 
     let nextVersion = await getNextVersionTag(prefix, prerelease);
 
@@ -10141,7 +10141,7 @@ async function run() {
         `Only outputting version because output-only is set to ${outputOnly}`
       );
     }
-    `version=${nextVersion}` >> $GITHUB_OUTPUT;
+    setOutput("version", nextVersion);
   } catch (error) {
     setFailed(error.message);
   }
