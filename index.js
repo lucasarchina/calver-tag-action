@@ -112,7 +112,7 @@ function getPrereleaseVersion(previousVersionTags, prerelease) {
 
 function _tagExists(tagParts, previousVersionTags, prereleaseParts) {
   let newTag = joinParts(tagParts);
-
+  newTag = newTag.split("_")[0];
   if (prereleaseParts) {
     const [prerelease, prereleaseVersion] = prereleaseParts;
     newTag = `${newTag}-${prerelease}.${prereleaseVersion}`;
