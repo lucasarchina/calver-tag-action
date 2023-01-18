@@ -141,7 +141,7 @@ function getDateParts() {
   const date = new Date();
   const year = date.getUTCFullYear();
   const month = date.getUTCMonth() + 1;
-  const day = date.getUTCDay();
+  const day = date.getDate();
 
   return { year, month, day };
 }
