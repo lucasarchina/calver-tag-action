@@ -1,4 +1,4 @@
-// Heavily based on https://github.com/mydea/action-tag-date-version with some changes to the date and added prefix
+// Based on https://github.com/mydea/action-tag-date-version with added prefix and releaseType modifications
 const { setFailed, getInput, setOutput } = require("@actions/core");
 const { context } = require("@actions/github");
 const { exec } = require("@actions/exec");
@@ -9,6 +9,7 @@ async function run() {
     const prerelease = getInput("prerelease", { required: false });
     const prefix = getInput("prefix");
     const outputOnly = getInput("output-only", { required: false }) === "true";
+    const releaseType = getInput("releaseType", { required: true }); // New parameter
 
     const currentVersionTag = await getCurrentTag();
 
@@ -20,9 +21,14 @@ async function run() {
 
     let nextVersion = await getNextVersionTag(prefix, prerelease);
 
-    //Update to format yyyy.mm.dd_micro
+    // Update to format yyyy.mm.dd_micro
     let nextVersionArray = nextVersion.split(".");
     nextVersion = `${nextVersionArray[0]}.${nextVersionArray[1]}.${nextVersionArray[2]}_${nextVersionArray[3]}`;
+
+    // Append "-hotfix" if releaseType is "hotfix"
+    if (releaseType === "hotfix") {
+      nextVersion += "-hotfix";
+    }
 
     console.log(`Next version: ${nextVersion}`);
 
@@ -124,7 +130,7 @@ function _tagExists(tagParts, previousVersionTags, prereleaseParts) {
 }
 
 function processVersion(version) {
-  versionSplitted = version.replace("_", ".").split(".");
+  let versionSplitted = version.replace("_", ".").split(".");
   version = `${versionSplitted[0]}.${versionSplitted[1]}.${versionSplitted[2]}`;
   if (!semver.valid(version)) {
     return false;
