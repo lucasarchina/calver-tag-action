@@ -1,4 +1,4 @@
-// Based on https://github.com/mydea/action-tag-date-version with added prefix and releaseType modifications
+// Heavily based on https://github.com/mydea/action-tag-date-version with some changes to the date, added prefix and releaseType
 const { setFailed, getInput, setOutput } = require("@actions/core");
 const { context } = require("@actions/github");
 const { exec } = require("@actions/exec");
