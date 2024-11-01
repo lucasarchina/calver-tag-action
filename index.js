@@ -130,7 +130,7 @@ function _tagExists(tagParts, previousVersionTags, prereleaseParts) {
 }
 
 function processVersion(version) {
-  let versionSplitted = version.replace("_", ".").split(".");
+  let versionSplitted = version.replace("-hotfix", "").replace("_", ".").split(".");
   version = `${versionSplitted[0]}.${versionSplitted[1]}.${versionSplitted[2]}`;
   if (!semver.valid(version)) {
     return false;
